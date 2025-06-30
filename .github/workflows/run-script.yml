@@ -1,0 +1,72 @@
+name: Run Hello Script
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      log_filename:
+        description: 'Optional log filename override'
+        required: false
+        default: ''
+
+jobs:
+  run-hello-script:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Make script executable
+        run: chmod +x scripts/hello.sh
+
+      - name: Run hello.sh script
+        run: |
+          ./scripts/hello.sh
+
+      - name: Find latest log file
+        id: find_log
+        run: |
+          latest_log=$(ls -t logs/log-*.txt | head -n 1)
+          echo "Latest log file: $latest_log"
+          echo "log_file=$latest_log" >> $GITHUB_OUTPUT
+
+      - name: Validate log file contents
+        run: |
+          log_file="${{ steps.find_log.outputs.log_file }}"
+          echo "Validating $log_file"
+
+          # Check file exists
+          if [ ! -f "$log_file" ]; then
+            echo "Log file not found!"
+            exit 1
+          fi
+
+          # Check greeting
+          if ! grep -q "Hello from Bash!" "$log_file"; then
+            echo "Greeting not found in log file!"
+            exit 1
+          fi
+
+          # Check timestamp format (YYYY-MM-DD HH:MM:SS)
+          if ! grep -Eq '[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}' "$log_file"; then
+            echo "Timestamp not found or invalid!"
+            exit 1
+          fi
+
+          # Check numeric file count
+          if ! grep -Eq 'Number of regular files in output/: [0-9]+' "$log_file"; then
+            echo "File count not found or invalid!"
+            exit 1
+          fi
+
+          echo "Log file validation passed."
+
+      - name: Upload log file as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hello-log
+          path: ${{ steps.find_log.outputs.log_file }}
