@@ -21,4 +21,4 @@
    optional argument for log file name determination. In this case: ./scripts/hello.sh log_file_name. If no argument is passed, default to log-YYYYMMDD_HHMMSS.txt.
 
    For triggering the GitHub Actions workflow manually needs to go to the GitHub repo (https://github.com/tkudinov/devops_test_task_Taras_Kudinov.git) and
-   switch to the Actions tab and select Run Hello Script action than push Rerun-all-jobs button.
+   switch to the Actions tab and select Run Hello Script action than push Run workflow button with ability to add optional parameter as argument for custom name        log-file creation.
